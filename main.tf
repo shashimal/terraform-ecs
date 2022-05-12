@@ -14,8 +14,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
-  profile = "dsdev"
+  region  = "us-east-1"
 }
 
 module "iam" {
@@ -33,13 +32,13 @@ module "vpc" {
   private_subnets    = var.private_subnets
 }
 
-module "internal-alb" {
-  source          = "./modules/alb"
-  app_name        = var.app_name
-  private_subnets = module.vpc.private-subnets
-  vpc_id          = module.vpc.vpc-id
-  target-groups   = var.target-groups
-}
+#module "internal-alb" {
+#  source          = "./modules/alb"
+#  app_name        = var.app_name
+#  private_subnets = module.vpc.private-subnets
+#  vpc_id          = module.vpc.vpc-id
+#  target-groups   = var.target-groups
+#}
 
 module "ecr" {
   source                  = "./modules/ecr"
