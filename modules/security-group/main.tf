@@ -1,6 +1,6 @@
 resource "aws_security_group" "security-group" {
   name        = var.name
-  vpc_id      = var.vpc-id
+  vpc_id      = var.vpc_id
   description = var.description
 
   dynamic "ingress" {
