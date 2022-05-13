@@ -1,31 +1,13 @@
-resource "aws_alb" "ecs-internal-alb" {
-  name               = "${lower(var.app_name)}-ecs-internal-alb"
-  internal           = true
+resource "aws_alb" "alb" {
+  name               = var.name
+  internal           = var.is_internet_facing
   load_balancer_type = "application"
-  subnets            = var.private_subnets
-  security_groups    = [aws_security_group.ecs-alb-internal-security-group.id]
+  subnets            = var.subnets
+  security_groups    = var.security_groups
 }
 
-resource "aws_security_group" "ecs-alb-internal-security-group" {
-  vpc_id = var.vpc_id
-  name   = "${lower(var.app_name)}-interanl-alb-sg"
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_alb_target_group" "ecs-alb-internal-tg" {
-  for_each = var.target-groups
+resource "aws_alb_target_group" "alb-tg" {
+  for_each = var.target_groups
   name = "${lower(each.value.service_name)}-tg"
   port = each.value.port
   protocol = each.value.protocol
@@ -38,10 +20,11 @@ resource "aws_alb_target_group" "ecs-alb-internal-tg" {
   }
 }
 
-resource "aws_alb_listener" "ecs-internal-alb-listener" {
-  load_balancer_arn = aws_alb.ecs-internal-alb.id
-  port = 80
-  protocol = "HTTP"
+resource "aws_alb_listener" "alb-listener" {
+  load_balancer_arn = aws_alb.alb.id
+  port = var.listener_port
+  protocol = var.listener_protocol
+
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -52,12 +35,12 @@ resource "aws_alb_listener" "ecs-internal-alb-listener" {
   }
 }
 
-resource "aws_alb_listener_rule" "ecs-internal-alb-listener-rule" {
-  for_each = var.target-groups
-  listener_arn = aws_alb_listener.ecs-internal-alb-listener.arn
+resource "aws_alb_listener_rule" "alb-listener-rule" {
+  for_each = var.target_groups
+  listener_arn = aws_alb_listener.alb-listener.arn
   action {
     type = "forward"
-    target_group_arn = aws_alb_target_group.ecs-alb-internal-tg[each.key].arn
+    target_group_arn = aws_alb_target_group.alb-tg[each.key].arn
   }
   condition {
     path_pattern {
