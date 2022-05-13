@@ -14,7 +14,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = "us-east-1"
+  region = "us-east-1"
 }
 
 module "iam" {
@@ -32,13 +32,47 @@ module "vpc" {
   private_subnets    = var.private_subnets
 }
 
-#module "internal-alb" {
-#  source          = "./modules/alb"
-#  app_name        = var.app_name
-#  private_subnets = module.vpc.private-subnets
-#  vpc_id          = module.vpc.vpc-id
-#  target-groups   = var.target-groups
-#}
+module "internal-alb-security-group" {
+  source        = "./modules/security-group"
+  name          = "internal-alb-security-group"
+  description   = "internal-alb-security-group"
+  vpc_id        = module.vpc.vpc-id
+  ingress_rules = var.internal_alb_ingress_rules
+  egress_rules  = var.internal_alb_egress_rules
+}
+
+module "public-alb-security-group" {
+  source        = "./modules/security-group"
+  name          = "public-alb-security-group"
+  description   = "public-alb-security-group"
+  vpc_id        = module.vpc.vpc-id
+  ingress_rules = var.public_alb_ingress_rules
+  egress_rules  = var.public_alb_egress_rules
+}
+
+module "internal-alb" {
+  source             = "./modules/alb"
+  name               = "${lower(var.app_name)}-internal-alb"
+  subnets            = module.vpc.private-subnets
+  vpc_id             = module.vpc.vpc-id
+  target_groups      = var.internal_alb_target_groups
+  internal = true
+  listener_port = 80
+  listener_protocol = "HTTP"
+  security_groups    = [module.internal-alb-security-group.security-group-id]
+}
+
+module "public-alb" {
+  source             = "./modules/alb"
+  name               = "${lower(var.app_name)}-public-alb"
+  subnets            = module.vpc.public-subnets
+  vpc_id             = module.vpc.vpc-id
+  target_groups      = var.public_alb_target_groups
+  internal = false
+  listener_port = 80
+  listener_protocol = "HTTP"
+  security_groups    = [module.public-alb-security-group.security-group-id]
+}
 
 module "ecr" {
   source                  = "./modules/ecr"
@@ -50,9 +84,9 @@ module "ecs" {
   source                      = "./modules/ecs"
   app_name                    = var.app_name
   app_services                = var.app_services
-  account = var.account
-  region = var.region
+  account                     = var.account
+  region                      = var.region
   ecs-task-execution-role-arn = module.iam.ecs-task-execution-role-arn
-  task_definition_config = var.task_definition_config
+  task_definition_config      = var.task_definition_config
 }
 

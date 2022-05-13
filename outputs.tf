@@ -6,6 +6,10 @@ output "private-subnets" {
   value = module.vpc.private-subnets
 }
 
+output "public-subnets" {
+  value = module.vpc.public-subnets
+}
+
 output "internal-alb-dns" {
   value = module.internal-alb.internal-alb-dns
 }

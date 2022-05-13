@@ -1,6 +1,6 @@
 resource "aws_alb" "alb" {
   name               = var.name
-  internal           = var.is_internet_facing
+  internal           = var.internal
   load_balancer_type = "application"
   subnets            = var.subnets
   security_groups    = var.security_groups
@@ -18,6 +18,7 @@ resource "aws_alb_target_group" "alb-tg" {
     path = each.value.health_check.path
     protocol = each.value.protocol
   }
+
 }
 
 resource "aws_alb_listener" "alb-listener" {

@@ -2,7 +2,7 @@ variable "name" {
   type = string
 }
 
-variable "is_internet_facing" {
+variable "internal" {
   type = bool
 }
 
@@ -23,7 +23,7 @@ variable "listener_port" {
 }
 
 variable "listener_protocol" {
-  type = number
+  type = string
 }
 
 variable "target_groups" {

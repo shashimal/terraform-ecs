@@ -41,7 +41,43 @@ variable "public_subnets" {
 ########################################################################################################################
 
 #ALB
-variable "target-groups" {
+variable "internal_alb_ingress_rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    cidr_blocks = list(string)
+    protocol    = string
+  }))
+}
+
+variable "internal_alb_egress_rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    cidr_blocks = list(string)
+    protocol    = string
+  }))
+}
+
+variable "public_alb_ingress_rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    cidr_blocks = list(string)
+    protocol    = string
+  }))
+}
+
+variable "public_alb_egress_rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    cidr_blocks = list(string)
+    protocol    = string
+  }))
+}
+
+variable "internal_alb_target_groups" {
   type = map(object({
     service_name = string
     port = number
@@ -52,6 +88,19 @@ variable "target-groups" {
     })
   }))
 }
+
+variable "public_alb_target_groups" {
+  type = map(object({
+    service_name = string
+    port = number
+    protocol = string
+    path_pattern = string
+    health_check = object({
+      path: string
+    })
+  }))
+}
+
 ########################################################################################################################
 
 #ECS
