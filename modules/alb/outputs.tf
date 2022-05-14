@@ -13,3 +13,6 @@ output "aws_alb_listener" {
   value = aws_alb_listener.alb_listener
 }
 
+output "internal_alb" {
+  value = aws_alb.alb
+}

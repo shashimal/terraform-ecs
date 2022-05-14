@@ -74,9 +74,15 @@ module "public-alb" {
   security_groups   = [module.public_alb_security_group.security_group_id]
 }
 
+module "route53_private_zone" {
+  source = "./modules/route53"
+  alb = module.internal-alb.internal_alb
+  vpc_id = module.vpc.vpc_id
+}
+
 module "ecr" {
-  source                  = "./modules/ecr"
-  app_name                = var.app_name
+  source           = "./modules/ecr"
+  app_name         = var.app_name
   ecr_repositories = var.app_services
 }
 
