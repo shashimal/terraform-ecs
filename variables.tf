@@ -104,12 +104,14 @@ variable "public_alb_target_groups" {
 ########################################################################################################################
 
 #ECS
-variable "task_definition_config" {
+variable "service_config" {
   type = map(object({
     name          = string
     cpu           = number
     memory        = number
-    containerPort = number
+    container_port = number
+    desired_count = number
+    public_service = bool
   }))
 }
 ########################################################################################################################

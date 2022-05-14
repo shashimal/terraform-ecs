@@ -1,15 +1,15 @@
-output "internal-alb-dns" {
+output "internal_alb-dns" {
   value = aws_alb.alb.dns_name
 }
-output "internal-alb-id" {
+output "internal_alb_id" {
   value = aws_alb.alb.id
 }
 
-output "target-groups" {
-  value = aws_alb_target_group.alb-tg
+output "target_groups" {
+  value = aws_alb_target_group.alb_target_group
 }
 
 output "aws_alb_listener" {
-  value = aws_alb_listener.alb-listener
+  value = aws_alb_listener.alb_listener
 }
 

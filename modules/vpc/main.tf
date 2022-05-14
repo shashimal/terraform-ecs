@@ -20,7 +20,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_subnet" "private-subnet" {
+resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.vpc.id
   count             = length(var.private_subnets)
   cidr_block        = element(var.private_subnets, count.index )
@@ -32,7 +32,7 @@ resource "aws_subnet" "private-subnet" {
   }
 }
 
-resource "aws_subnet" "public-subnet" {
+resource "aws_subnet" "public_subnet" {
   vpc_id            = aws_vpc.vpc.id
   count             = length(var.public_subnets)
   cidr_block        = element(var.public_subnets, count.index )
@@ -45,7 +45,7 @@ resource "aws_subnet" "public-subnet" {
   }
 }
 
-resource "aws_route_table" "public-route-table" {
+resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
   tags   = {
     Name = "${lower(var.app_name)}public-route-table"
@@ -54,13 +54,13 @@ resource "aws_route_table" "public-route-table" {
 }
 
 resource "aws_route" "public-route" {
-  route_table_id = aws_route_table.public-route-table.id
+  route_table_id = aws_route_table.public_route_table.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id = aws_internet_gateway.igw.id
 }
 
 resource "aws_route_table_association" "public-route-association" {
   count = length(var.public_subnets)
-  subnet_id = element(aws_subnet.public-subnet.*.id,count.index )
-  route_table_id = aws_route_table.public-route-table.id
+  subnet_id = element(aws_subnet.public_subnet.*.id,count.index )
+  route_table_id = aws_route_table.public_route_table.id
 }

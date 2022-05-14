@@ -6,7 +6,7 @@ resource "aws_alb" "alb" {
   security_groups    = var.security_groups
 }
 
-resource "aws_alb_target_group" "alb-tg" {
+resource "aws_alb_target_group" "alb_target_group" {
   for_each = var.target_groups
   name = "${lower(each.value.service_name)}-tg"
   port = each.value.port
@@ -21,7 +21,7 @@ resource "aws_alb_target_group" "alb-tg" {
 
 }
 
-resource "aws_alb_listener" "alb-listener" {
+resource "aws_alb_listener" "alb_listener" {
   load_balancer_arn = aws_alb.alb.id
   port = var.listener_port
   protocol = var.listener_protocol
@@ -36,12 +36,12 @@ resource "aws_alb_listener" "alb-listener" {
   }
 }
 
-resource "aws_alb_listener_rule" "alb-listener-rule" {
+resource "aws_alb_listener_rule" "alb_listener_rule" {
   for_each = var.target_groups
-  listener_arn = aws_alb_listener.alb-listener.arn
+  listener_arn = aws_alb_listener.alb_listener.arn
   action {
     type = "forward"
-    target_group_arn = aws_alb_target_group.alb-tg[each.key].arn
+    target_group_arn = aws_alb_target_group.alb_target_group[each.key].arn
   }
   condition {
     path_pattern {

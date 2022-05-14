@@ -32,52 +32,52 @@ module "vpc" {
   private_subnets    = var.private_subnets
 }
 
-module "internal-alb-security-group" {
+module "internal_alb_security_group" {
   source        = "./modules/security-group"
   name          = "internal-alb-security-group"
   description   = "internal-alb-security-group"
-  vpc_id        = module.vpc.vpc-id
+  vpc_id        = module.vpc.vpc_id
   ingress_rules = var.internal_alb_ingress_rules
   egress_rules  = var.internal_alb_egress_rules
 }
 
-module "public-alb-security-group" {
+module "public_alb_security_group" {
   source        = "./modules/security-group"
   name          = "public-alb-security-group"
   description   = "public-alb-security-group"
-  vpc_id        = module.vpc.vpc-id
+  vpc_id        = module.vpc.vpc_id
   ingress_rules = var.public_alb_ingress_rules
   egress_rules  = var.public_alb_egress_rules
 }
 
 module "internal-alb" {
-  source             = "./modules/alb"
-  name               = "${lower(var.app_name)}-internal-alb"
-  subnets            = module.vpc.private-subnets
-  vpc_id             = module.vpc.vpc-id
-  target_groups      = var.internal_alb_target_groups
-  internal = true
-  listener_port = 80
+  source            = "./modules/alb"
+  name              = "${lower(var.app_name)}-internal-alb"
+  subnets           = module.vpc.private_subnets
+  vpc_id            = module.vpc.vpc_id
+  target_groups     = var.internal_alb_target_groups
+  internal          = true
+  listener_port     = 80
   listener_protocol = "HTTP"
-  security_groups    = [module.internal-alb-security-group.security-group-id]
+  security_groups   = [module.internal_alb_security_group.security_group_id]
 }
 
 module "public-alb" {
-  source             = "./modules/alb"
-  name               = "${lower(var.app_name)}-public-alb"
-  subnets            = module.vpc.public-subnets
-  vpc_id             = module.vpc.vpc-id
-  target_groups      = var.public_alb_target_groups
-  internal = false
-  listener_port = 80
+  source            = "./modules/alb"
+  name              = "${lower(var.app_name)}-public-alb"
+  subnets           = module.vpc.public_subnets
+  vpc_id            = module.vpc.vpc_id
+  target_groups     = var.public_alb_target_groups
+  internal          = false
+  listener_port     = 80
   listener_protocol = "HTTP"
-  security_groups    = [module.public-alb-security-group.security-group-id]
+  security_groups   = [module.public_alb_security_group.security_group_id]
 }
 
 module "ecr" {
   source                  = "./modules/ecr"
   app_name                = var.app_name
-  ecr_repository_services = var.app_services
+  ecr_repositories = var.app_services
 }
 
 module "ecs" {
@@ -86,7 +86,14 @@ module "ecs" {
   app_services                = var.app_services
   account                     = var.account
   region                      = var.region
-  ecs-task-execution-role-arn = module.iam.ecs-task-execution-role-arn
-  task_definition_config      = var.task_definition_config
+  service_config              = var.service_config
+  ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
+  vpc_id                      = module.vpc.vpc_id
+  private_subnets             = module.vpc.private_subnets
+  public_subnets              = module.vpc.public_subnets
+  public_alb_security_group   = module.public_alb_security_group
+  internal_alb_security_group = module.internal_alb_security_group
+  internal_alb_target_groups  = module.internal-alb.target_groups
+  public_alb_target_groups    = module.public-alb.target_groups
 }
 
