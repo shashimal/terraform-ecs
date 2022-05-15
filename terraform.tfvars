@@ -1,110 +1,157 @@
-## Application
-account      = 00000000
+## Application configurations
+account      = 000000
 region       = "us-east-1"
-app_name     = "HBCU"
-env          = "PROD"
+app_name     = "ecs-demo"
+env          = "dev"
 app_services = ["webapp", "customer", "transaction"]
 
-#VPC
+#VPC configurations
 cidr               = "10.10.0.0/16"
 availability_zones = ["us-east-1a", "us-east-1b"]
 public_subnets     = ["10.10.50.0/24", "10.10.51.0/24"]
 private_subnets    = ["10.10.0.0/24", "10.10.1.0/24"]
 
-#ALB
-internal_alb_ingress_rules = [
-  {
-    from_port   = 80
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["10.10.0.0/16"]
-  }
-]
+#Internal ALB configurations
+internal_alb_config = {
+  name      = "Internal-Alb"
+  listeners = {
+    "HTTP" = {
+      listener_port     = 80
+      listener_protocol = "HTTP"
 
-internal_alb_egress_rules = [
-  {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.10.0.0/16"]
-  }
-]
-
-public_alb_ingress_rules = [
-  {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-]
-
-public_alb_egress_rules = [
-  {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-]
-
-internal_alb_target_groups = {
-  "customer" = {
-    service_name = "customer"
-    port         = 80
-    protocol     = "HTTP"
-    path_pattern = "/customer*"
-    health_check = {
-      path = "/health"
-    }
-  },
-  "transaction" = {
-    service_name = "transaction"
-    port         = 80
-    path_pattern = "/transaction*"
-    protocol     = "HTTP"
-    health_check = {
-      path = "/health"
     }
   }
+
+  ingress_rules = [
+    {
+      from_port   = 80
+      to_port     = 3000
+      protocol    = "tcp"
+      cidr_blocks = ["10.10.0.0/16"]
+    }
+  ]
+
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["10.10.0.0/16"]
+    }
+  ]
 }
 
-public_alb_target_groups = {
-  "webapp" = {
-    service_name = "webapp"
-    port         = 80
-    protocol     = "HTTP"
-    path_pattern = "/*"
-    health_check = {
-      path = "/health"
+#Friendly url name for internal load balancer DNS
+internal_url_name = "service.internal"
+
+#Public ALB configurations
+public_alb_config = {
+  name      = "Public-Alb"
+  listeners = {
+    "HTTP" = {
+      listener_port     = 80
+      listener_protocol = "HTTP"
+
     }
   }
+
+  ingress_rules = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
+
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }
 
-#ECS
-service_config = {
-  "webapp" = {
-    name          = "webapp"
-    cpu           = 256
-    memory        = 512
-    container_port = 80
-    desired_count = 1
-    public_service = true
+#Microservices
+microservice_config = {
+  "WebApp" = {
+    name             = "WebApp"
+    is_public        = true
+    container_port   = 80
+    host_port        = 80
+    cpu              = 256
+    memory           = 512
+    desired_count    = 1
+    alb_target_group = {
+      port              = 80
+      protocol          = "HTTP"
+      path_pattern      = ["/*"]
+      health_check_path = "/health"
+      priority          = 1
+    }
+    auto_scaling = {
+      max_capacity = 2
+      min_capacity = 1
+      cpu          = {
+        target_value = 75
+      }
+      memory = {
+        target_value = 75
+      }
+    }
   },
-  "customer" = {
-    name          = "customer"
-    cpu           = 256
-    memory        = 512
-    container_port = 3000
-    desired_count = 1
-    public_service = false
+  "Customer" = {
+    name             = "Customer"
+    is_public        = false
+    container_port   = 3000
+    host_port        = 3000
+    cpu              = 256
+    memory           = 512
+    desired_count    = 1
+    alb_target_group = {
+      port              = 3000
+      protocol          = "HTTP"
+      path_pattern      = ["/customer*"]
+      health_check_path = "/health"
+      priority          = 1
+    }
+    auto_scaling = {
+      max_capacity = 2
+      min_capacity = 1
+      cpu          = {
+        target_value = 75
+      }
+      memory = {
+        target_value = 75
+      }
+    }
   },
-  "transaction" = {
-    name          = "transaction"
-    cpu           = 256
-    memory        = 512
-    container_port = 3000
-    desired_count = 1
-    public_service = false
+  "Transaction" = {
+    name             = "Transaction"
+    is_public        = false
+    container_port   = 3000
+    host_port        = 3000
+    cpu              = 256
+    memory           = 512
+    desired_count    = 1
+    alb_target_group = {
+      port              = 3000
+      protocol          = "HTTP"
+      path_pattern      = ["/transaction*"]
+      health_check_path = "/health"
+      priority          = 1
+    }
+    auto_scaling = {
+      max_capacity = 2
+      min_capacity = 1
+      cpu          = {
+        target_value = 75
+      }
+      memory = {
+        target_value = 75
+      }
+    }
   }
 }

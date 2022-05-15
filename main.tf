@@ -17,6 +17,11 @@ provider "aws" {
   region = "us-east-1"
 }
 
+locals {
+  internal_alb_target_groups = {for service, config in var.microservice_config : service => config.alb_target_group if !config.is_public}
+  public_alb_target_groups   = {for service, config in var.microservice_config : service => config.alb_target_group if config.is_public}
+}
+
 module "iam" {
   source   = "./modules/iam"
   app_name = var.app_name
@@ -34,20 +39,20 @@ module "vpc" {
 
 module "internal_alb_security_group" {
   source        = "./modules/security-group"
-  name          = "internal-alb-security-group"
-  description   = "internal-alb-security-group"
+  name          = "${lower(var.app_name)}-internal-alb-sg"
+  description   = "${lower(var.app_name)}-internal-alb-sg"
   vpc_id        = module.vpc.vpc_id
-  ingress_rules = var.internal_alb_ingress_rules
-  egress_rules  = var.internal_alb_egress_rules
+  ingress_rules = var.internal_alb_config.ingress_rules
+  egress_rules  = var.internal_alb_config.egress_rules
 }
 
 module "public_alb_security_group" {
   source        = "./modules/security-group"
-  name          = "public-alb-security-group"
-  description   = "public-alb-security-group"
+  name          = "${lower(var.app_name)}-public-alb-sg"
+  description   = "${lower(var.app_name)}-public-alb-sg"
   vpc_id        = module.vpc.vpc_id
-  ingress_rules = var.public_alb_ingress_rules
-  egress_rules  = var.public_alb_egress_rules
+  ingress_rules = var.public_alb_config.ingress_rules
+  egress_rules  = var.public_alb_config.egress_rules
 }
 
 module "internal-alb" {
@@ -55,10 +60,11 @@ module "internal-alb" {
   name              = "${lower(var.app_name)}-internal-alb"
   subnets           = module.vpc.private_subnets
   vpc_id            = module.vpc.vpc_id
-  target_groups     = var.internal_alb_target_groups
+  target_groups     = local.internal_alb_target_groups
   internal          = true
   listener_port     = 80
   listener_protocol = "HTTP"
+  listeners         = var.internal_alb_config.listeners
   security_groups   = [module.internal_alb_security_group.security_group_id]
 }
 
@@ -67,16 +73,18 @@ module "public-alb" {
   name              = "${lower(var.app_name)}-public-alb"
   subnets           = module.vpc.public_subnets
   vpc_id            = module.vpc.vpc_id
-  target_groups     = var.public_alb_target_groups
+  target_groups     = local.public_alb_target_groups
   internal          = false
   listener_port     = 80
   listener_protocol = "HTTP"
+  listeners         = var.public_alb_config.listeners
   security_groups   = [module.public_alb_security_group.security_group_id]
 }
 
 module "route53_private_zone" {
   source = "./modules/route53"
-  alb = module.internal-alb.internal_alb
+  internal_url_name = var.internal_url_name
+  alb    = module.internal-alb.internal_alb
   vpc_id = module.vpc.vpc_id
 }
 
@@ -92,7 +100,7 @@ module "ecs" {
   app_services                = var.app_services
   account                     = var.account
   region                      = var.region
-  service_config              = var.service_config
+  service_config              = var.microservice_config
   ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
   vpc_id                      = module.vpc.vpc_id
   private_subnets             = module.vpc.private_subnets

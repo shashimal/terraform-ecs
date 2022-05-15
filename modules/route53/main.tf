@@ -1,12 +1,12 @@
 resource "aws_route53_zone" "private_zone" {
-  name = "service.internal"
+  name = var.internal_url_name
   vpc {
     vpc_id = var.vpc_id
   }
 }
 
 resource "aws_route53_record" "internal_service_record" {
-  name    = "service.internal"
+  name    = var.internal_url_name
   type    = "A"
   zone_id = aws_route53_zone.private_zone.zone_id
 

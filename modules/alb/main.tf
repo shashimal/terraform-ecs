@@ -8,23 +8,24 @@ resource "aws_alb" "alb" {
 
 resource "aws_alb_target_group" "alb_target_group" {
   for_each = var.target_groups
-  name = "${lower(each.value.service_name)}-tg"
+  name = "${lower(each.key)}-tg"
   port = each.value.port
   protocol = each.value.protocol
   target_type = "ip"
   vpc_id = var.vpc_id
 
   health_check {
-    path = each.value.health_check.path
+    path = each.value.health_check_path
     protocol = each.value.protocol
   }
 
 }
 
 resource "aws_alb_listener" "alb_listener" {
+  for_each = var.listeners
   load_balancer_arn = aws_alb.alb.id
-  port = var.listener_port
-  protocol = var.listener_protocol
+  port = each.value["listener_port"]
+  protocol = each.value["listener_protocol"]
 
   default_action {
     type = "fixed-response"
@@ -38,14 +39,14 @@ resource "aws_alb_listener" "alb_listener" {
 
 resource "aws_alb_listener_rule" "alb_listener_rule" {
   for_each = var.target_groups
-  listener_arn = aws_alb_listener.alb_listener.arn
+  listener_arn = aws_alb_listener.alb_listener[each.value.protocol].arn
   action {
     type = "forward"
     target_group_arn = aws_alb_target_group.alb_target_group[each.key].arn
   }
   condition {
     path_pattern {
-      values = [each.value.path_pattern]
+      values = each.value.path_pattern
     }
   }
 }
