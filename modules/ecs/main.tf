@@ -7,6 +7,7 @@ resource "aws_cloudwatch_log_group" "ecs_cw_log_group" {
   name     = lower("${each.key}-logs")
 }
 
+#Create task definitions for app services
 resource "aws_ecs_task_definition" "ecs_task_definition" {
   for_each                 = var.service_config
   family                   = "${lower(var.app_name)}-${each.key}"
@@ -42,6 +43,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   ])
 }
 
+#Create services for app services
 resource "aws_ecs_service" "private_service" {
   for_each = var.service_config
 
@@ -64,7 +66,6 @@ resource "aws_ecs_service" "private_service" {
     container_name   = each.value.name
     container_port   = each.value.container_port
   }
-
 }
 
 resource "aws_appautoscaling_target" "service_autoscaling" {

@@ -2,6 +2,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# VPC
 resource "aws_vpc" "vpc" {
   cidr_block           = var.cidr
   enable_dns_hostnames = true
@@ -12,6 +13,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
+# Internet gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
   tags   = {
@@ -20,6 +22,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Private subnets
 resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.vpc.id
   count             = length(var.private_subnets)
@@ -32,6 +35,7 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
+# Public subnets
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.vpc.id
   count                   = length(var.public_subnets)
@@ -45,6 +49,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
+# Public route table
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
   tags   = {
@@ -53,6 +58,21 @@ resource "aws_route_table" "public_route_table" {
   }
 }
 
+# Public route
+resource "aws_route" "public-route" {
+  route_table_id         = aws_route_table.public_route_table.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+# Route table association with public subnets
+resource "aws_route_table_association" "public-route-association" {
+  count          = length(var.public_subnets)
+  subnet_id      = element(aws_subnet.public_subnet.*.id, count.index )
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# Private route table
 resource "aws_route_table" "private_route_table" {
   vpc_id = aws_vpc.vpc.id
   tags   = {
@@ -61,36 +81,28 @@ resource "aws_route_table" "private_route_table" {
   }
 }
 
-resource "aws_route" "public-route" {
-  route_table_id         = aws_route_table.public_route_table.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.igw.id
-}
-
+# Public route
 resource "aws_route" "private_route" {
   route_table_id         = aws_route_table.private_route_table.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_nat_gateway.nat_gateway.id
 }
 
-resource "aws_route_table_association" "public-route-association" {
-  count          = length(var.public_subnets)
-  subnet_id      = element(aws_subnet.public_subnet.*.id, count.index )
-  route_table_id = aws_route_table.public_route_table.id
-}
-
+# Route table association with private subnets
 resource "aws_route_table_association" "private_route_association" {
   count          = length(var.private_subnets)
   subnet_id      = element(aws_subnet.private_subnet.*.id, count.index )
   route_table_id = aws_route_table.private_route_table.id
 }
 
+# Nat gateway
 resource "aws_nat_gateway" "nat_gateway" {
   allocation_id = aws_eip.eip.id
   subnet_id     = element(aws_subnet.public_subnet.*.id, 0)
   depends_on    = [aws_internet_gateway.igw]
 }
 
+# Elastic API for gateway
 resource "aws_eip" "eip" {
   vpc = true
 }

@@ -6,6 +6,7 @@ resource "aws_alb" "alb" {
   security_groups    = var.security_groups
 }
 
+#Dynamically create the alb target groups for app services
 resource "aws_alb_target_group" "alb_target_group" {
   for_each = var.target_groups
   name = "${lower(each.key)}-tg"
@@ -21,6 +22,7 @@ resource "aws_alb_target_group" "alb_target_group" {
 
 }
 
+#Create the alb listener for the load balancer
 resource "aws_alb_listener" "alb_listener" {
   for_each = var.listeners
   load_balancer_arn = aws_alb.alb.id
@@ -37,6 +39,7 @@ resource "aws_alb_listener" "alb_listener" {
   }
 }
 
+#Creat listener rules
 resource "aws_alb_listener_rule" "alb_listener_rule" {
   for_each = var.target_groups
   listener_arn = aws_alb_listener.alb_listener[each.value.protocol].arn

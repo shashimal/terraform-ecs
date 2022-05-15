@@ -82,10 +82,10 @@ module "public-alb" {
 }
 
 module "route53_private_zone" {
-  source = "./modules/route53"
+  source            = "./modules/route53"
   internal_url_name = var.internal_url_name
-  alb    = module.internal-alb.internal_alb
-  vpc_id = module.vpc.vpc_id
+  alb               = module.internal-alb.internal_alb
+  vpc_id            = module.vpc.vpc_id
 }
 
 module "ecr" {
