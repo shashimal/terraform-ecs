@@ -1,7 +1,7 @@
 ########################################################################################################################
 # Application
 variable "account" {
-  type = number
+  type = string
   description = "AWS account number"
 }
 

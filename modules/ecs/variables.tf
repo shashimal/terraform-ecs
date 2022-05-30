@@ -7,7 +7,7 @@ variable "app_services" {
 }
 
 variable "account" {
-  type = number
+  type = string
 }
 
 variable "region" {
