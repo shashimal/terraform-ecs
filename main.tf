@@ -55,7 +55,7 @@ module "public_alb_security_group" {
   egress_rules  = var.public_alb_config.egress_rules
 }
 
-module "internal-alb" {
+module "internal_alb" {
   source            = "./modules/alb"
   name              = "${lower(var.app_name)}-internal-alb"
   subnets           = module.vpc.private_subnets
@@ -68,7 +68,7 @@ module "internal-alb" {
   security_groups   = [module.internal_alb_security_group.security_group_id]
 }
 
-module "public-alb" {
+module "public_alb" {
   source            = "./modules/alb"
   name              = "${lower(var.app_name)}-public-alb"
   subnets           = module.vpc.public_subnets
