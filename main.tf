@@ -84,7 +84,7 @@ module "public_alb" {
 module "route53_private_zone" {
   source            = "./modules/route53"
   internal_url_name = var.internal_url_name
-  alb               = module.internal-alb.internal_alb
+  alb               = module.internal_alb.internal_alb
   vpc_id            = module.vpc.vpc_id
 }
 
@@ -107,7 +107,10 @@ module "ecs" {
   public_subnets              = module.vpc.public_subnets
   public_alb_security_group   = module.public_alb_security_group
   internal_alb_security_group = module.internal_alb_security_group
-  internal_alb_target_groups  = module.internal-alb.target_groups
-  public_alb_target_groups    = module.public-alb.target_groups
+  internal_alb_target_groups  = module.internal_alb.target_groups
+  public_alb_target_groups    = module.public_alb.target_groups
 }
 
+output "public_alb_target_groups" {
+  value = local.public_alb_target_groups
+}
