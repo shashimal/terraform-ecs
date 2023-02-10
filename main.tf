@@ -110,7 +110,3 @@ module "ecs" {
   internal_alb_target_groups  = module.internal_alb.target_groups
   public_alb_target_groups    = module.public_alb.target_groups
 }
-
-output "public_alb_target_groups" {
-  value = local.public_alb_target_groups
-}
