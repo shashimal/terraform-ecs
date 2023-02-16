@@ -12,10 +12,10 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   for_each                 = var.service_config
   family                   = "${lower(var.app_name)}-${each.key}"
   execution_role_arn       = var.ecs_task_execution_role_arn
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
-  memory                   = each.value.memory
-  cpu                      = each.value.cpu
+  #memory                   = each.value.memory
+  #cpu                      = each.value.cpu
 
   container_definitions = jsonencode([
     {
