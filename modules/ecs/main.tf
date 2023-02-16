@@ -1,5 +1,6 @@
 resource "aws_ecs_cluster" "ecs_cluster" {
   name = lower("${var.app_name}-cluster")
+
 }
 
 resource "aws_cloudwatch_log_group" "ecs_cw_log_group" {
@@ -55,7 +56,7 @@ resource "aws_ecs_service" "private_service" {
 
   network_configuration {
     subnets          = each.value.is_public ==true ? var.public_subnets : var.private_subnets
-    assign_public_ip = each.value.is_public ==true ? true : false
+    #assign_public_ip = each.value.is_public ==true ? true : false
     security_groups  = [
       each.value.is_public == true ? aws_security_group.webapp_security_group.id : aws_security_group.service_security_group.id
     ]

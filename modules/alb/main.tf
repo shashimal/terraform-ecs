@@ -12,7 +12,7 @@ resource "aws_alb_target_group" "alb_target_group" {
   name = "${lower(each.key)}-tg"
   port = each.value.port
   protocol = each.value.protocol
-  target_type = "ip"
+  target_type = "instance"
   vpc_id = var.vpc_id
 
   health_check {
