@@ -50,7 +50,7 @@ resource "aws_ecs_service" "private_service" {
   name            = "${each.value.name}-Service"
   cluster         = aws_ecs_cluster.ecs_cluster.id
   task_definition = aws_ecs_task_definition.ecs_task_definition[each.key].arn
-  launch_type     = "FARGATE"
+  launch_type     = "EC2"
   desired_count   = each.value.desired_count
 
   network_configuration {
