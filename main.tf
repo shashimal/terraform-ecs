@@ -7,14 +7,16 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "du-terraform-state-bucket"
+    bucket = "larryterraformstatebvcket"
     key    = "state/terraform_state.tfstate"
-    region = "us-east-1"
+    region = "eu-west-1"
+    profile = "larry"
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "eu-west-1"
+  profile = "larry"
 }
 
 locals {
